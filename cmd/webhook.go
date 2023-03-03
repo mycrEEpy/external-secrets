@@ -92,13 +92,17 @@ var webhookCmd = &cobra.Command{
 			ticker := time.NewTicker(every)
 			for {
 				select {
-				case <-sigs:
+				case sig := <-sigs:
+					setupLog.Info("signal received", "signal", sig)
 					cancel()
+					return
 				case <-ticker.C:
 					setupLog.Info("validating certs")
 					err = crds.CheckCerts(c, dnsName, time.Now().Add(certLookaheadInterval))
 					if err != nil {
+						setupLog.Error(err, "certs check failed")
 						cancel()
+						return
 					}
 					setupLog.Info("certs are valid")
 				}
